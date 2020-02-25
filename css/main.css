@@ -1,0 +1,145 @@
+* {
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Oswald';
+}
+
+#header {
+  width: 80%;
+  height: 280px;
+  background: -webkit-gradient(linear, left top, right top, from(#e60000), to(#00fa00));
+  background: linear-gradient(90deg, #e60000, #00fa00);
+  margin: 20px 10% 20px 10%;
+  border-radius: 0 20px 20px 0;
+}
+
+#header #magasineBut {
+  width: 300px;
+}
+
+#header #magasineBut button {
+  width: 120px;
+  height: 25px;
+  margin: 10px 0 10px 20px;
+}
+
+#header #addGoodBlock {
+  width: 350px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+}
+
+#header #addGoodBlock form {
+  width: 330px;
+  margin: 20px 0 0 20px;
+}
+
+#header #addGoodBlock form input {
+  width: 100%;
+  height: 40px;
+  padding: 10px;
+  border-radius: 10px 0 10px 0;
+}
+
+#header #addGoodBlock button {
+  width: 150px;
+  margin: 20px 0 0 20px;
+  height: 50px;
+  border-radius: 10px 0 10px 0;
+  cursor: pointer;
+}
+
+#header #addGoodBlock button:hover {
+  width: 160px;
+  height: 55px;
+}
+
+#header #developConsole {
+  margin: 20px 0 20px 20px;
+  color: white;
+}
+
+#crutchID {
+  width: 100%;
+}
+
+#crutchID .container {
+  width: 80%;
+  margin: 0 10%;
+  height: -webkit-fit-content;
+  height: -moz-fit-content;
+  height: fit-content;
+}
+
+#crutchID .container .card {
+  width: 100%;
+  height: 120px;
+  margin: 10px 0;
+  padding: 20px;
+  position: relative;
+  border-radius: 0 20px 20px 0;
+}
+
+#crutchID .container .card .description {
+  position: absolute;
+  width: 60%;
+  height: 70px;
+  background-color: white;
+  padding: 10px;
+  top: 10px;
+  left: 20px;
+  border-radius: 0 20px 20px 0;
+  font-weight: bold;
+}
+
+#crutchID .container .card .memorial {
+  position: absolute;
+  width: 50%;
+  bottom: 10px;
+  left: 20px;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+#crutchID .container .card .timerDisplay {
+  position: absolute;
+  width: 30%;
+  bottom: 10px;
+  right: 10px;
+  text-align: right;
+  font-weight: bold;
+}
+
+#crutchID .container .card .btn {
+  position: absolute;
+  width: 60px;
+  height: 40px;
+  background-color: black;
+  color: white;
+  top: 10px;
+  right: 10px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+#crutchID .container .card .btn:hover {
+  width: 65px;
+  height: 45px;
+}
+/*# sourceMappingURL=main.css.map */
