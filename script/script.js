@@ -67,7 +67,7 @@ function dropGoodTables() {
         tx.executeSql(
             dropGoodTable,
             [],
-            () => document.getElementById('developConsole').innerText = 'Таблица успешно угроблена.',
+            () => document.getElementById('developConsole').innerText = 'Таблица успешно удалена.',
             () => document.getElementById('developConsole').innerText = 'Удалить таблицу дедлайнов почему-то не удалось.'
         );
     });
@@ -93,7 +93,6 @@ function addMagasine() {
             databaseCreate,
             [],
             () => document.getElementById('developConsole').innerText = 'Таблица дедлайнов пересоздана и пока что пуста',
-            // () => document.getElementById('developConsole').innerText = 'Не удалось создать таблицу дедлайнов.' // чтоб не заёбывала
             () => console.log('Не удалось создать таблицу дедлайнов. Скорее всего, она уже существует.')
         );
     });
@@ -118,9 +117,7 @@ function addDeadline() {
             tx.executeSql(
                 goodInsert,
                 [goodUniqueDate, goodUniqueDesc],
-                () => setTimeout(() => {
-                    window.location.reload()
-                }, 500), // это костыль. Пиздецкий костыль. Прям фу, какой костыль. Стыдно!,
+                () => document.getElementById('developConsole').innerText = 'Дедлайн добавлен.',
                 () => document.getElementById('developConsole').innerText = 'Не удалось добавить дедлайн.'
             );
         });
@@ -164,18 +161,27 @@ function selectAllGood() { // запрашиваем список элемент
     });
 };
 
+let containerElem = document.createElement('div');
+containerElem.classList.add('container');
+
 function renderCards(list) { // визуализируем в HTML очередной дедлайн. Это ОЧЕНЬ длинная функция.
 
-    document.querySelector('#crutchID').innerHTML = ''; // очищаем пользовательский элемент перед добавлением нового дедлайна
-
     let arr = [...list]; // получаем массив с тремя объектами, у объектов ключи id, data и description
-    let containerElem = document.createElement('div');
-    containerElem.classList.add('container');
 
-    arr.forEach(function (elem) { // перебираем КАЖДЫЙ элемент массива по ключам id, data и description
+    for (let i = 0; i < arr.length; i++) {
+
+        let elem = arr[i];
+
+        if (document.getElementById(`id${elem.id}`)) {
+            continue
+        }
+        /* сделано для удаления ошибки типа "Failed to execute 'define' on 'CustomElementRegistry': the name 
+               "timer-display${N}" has already been used with this registry" при перерендере списка дедлайнов во время удаления или добавления пользовательского элемента. 
+               Природа бага так и не выяснена. */
 
         let cardElem = document.createElement('div');
         cardElem.classList.add('card');
+        cardElem.id = 'id' + elem.id;
 
         let description = document.createElement('div');
         description.classList.add('description');
@@ -183,6 +189,7 @@ function renderCards(list) { // визуализируем в HTML очеред�
 
         let timerDisplay = document.createElement(`timer-display${elem['id']}`); // для каждого дедлайна - свой пользовательский элемент с таймингом.
         timerDisplay.classList.add('timerDisplay');
+        timerDisplay.id = 'ide' + elem.id;
         timerDisplay.setAttribute('deaddata', elem.date); // таймстамп дедлайна
         timerDisplay.setAttribute('currentdata', Date.parse(new Date())); // текущий таймстамп
 
@@ -221,20 +228,23 @@ function renderCards(list) { // визуализируем в HTML очеред�
                 let delta = this.getAttribute('deaddata') / 1000 - this.count; // вычисляем остаток секунд
                 if (delta > 0) { // если дедлайн ещё не просрочен
                     let dayRem = Math.floor(delta / 86400); // округляем кол-во дней в остатке
-                    let hoursRem = getZero(Math.floor((delta - dayRem * 86400) / 3600));  // округляем остаток часов и так далее, уповая на неявное приведение типов
+                    let hoursRem = getZero(Math.floor((delta - dayRem * 86400) / 3600)); // округляем остаток часов и так далее, уповая на неявное приведение типов
                     let minRem = getZero(Math.floor((delta - hoursRem * 3600 - dayRem * 86400) / 60));
                     let secRem = getZero(delta - hoursRem * 3600 - minRem * 60 - dayRem * 86400);
-                    if (dayRem > 0) { // если до дедлайна больше суток
+                    if (dayRem > 365) {
+                        this.innerText = 'Времени ещё - завались!'; // если больше года
+                        this.parentElement.style.background = `rgb(0, 250, 0)` // фон зелёный
+                    } else if (dayRem > 0) { // если до дедлайна больше суток
                         this.innerText = 'Remain ' + dayRem + ' day and ' + hoursRem + ' : ' + minRem + " : " + secRem; // отображаем ещё и кол-во дней
                         this.parentElement.style.background = `rgb(0, 250, 0)` // фон зелёный
                     } else { // если до дедлайна меньше суток
-                        let gradPercentage = Math.floor(delta/864); // вычисляем остаток от суток в процентах
+                        let gradPercentage = Math.floor(delta / 864); // вычисляем остаток от суток в процентах
                         this.innerText = 'Remain ' + hoursRem + ' : ' + minRem + " : " + secRem; // отображаем только время
                         if (gradPercentage > 49) {
                             this.parentElement.style.background = `linear-gradient(90deg, rgb(250, 0, 0), rgb(0, 250, 0) ${(100 - gradPercentage)*2}%)`; // двигаем градиент
                         } else {
                             this.parentElement.style.background = `linear-gradient(90deg, rgb(250, 0, 0) ${100 - gradPercentage*2}%, rgb(0, 250, 0) 100%)`;
-                        }                      
+                        }
                     }
                     this.count++;
                 } else { // если дедлайн просрочен
@@ -243,12 +253,21 @@ function renderCards(list) { // визуализируем в HTML очеред�
                 }
             }
 
+            disconnectedCallback() {
+                /*          Здесь должно быть что-то, что поможет избежать ошибки типа
+                            "Failed to execute 'define' on 'CustomElementRegistry': the name "timer-display${N}" has already been used with this registry"
+                            при удалении или добавлении пользовательских элементов через API */
+            }
+
             static get observedAttributes() {
                 return ['deaddata', 'currentdata' /* массив имён атрибутов для отслеживания их изменений */ ];
-            }            
+            }
         };
         customElements.define(`timer-display${elem['id']}`, UserTimer); // определяем пользовательский тайминг-элемент
-    });
+
+    };
+
+
     document.querySelector('#crutchID').appendChild(containerElem);
 };
 
@@ -259,12 +278,10 @@ function deleteDeadline(delId) {
         tx.executeSql(
             `delete from Vasilyev_deadline where id=${delId}`,
             [],
-            () => document.getElementById('developConsole').innerText = `Дедлайн удалён. Обновите страницу, если она не сделает это автоматически!`,
+            () => document.getElementById('developConsole').innerText = `Дедлайн удалён.`,
             () => document.getElementById('developConsole').innerText = 'Дедлайн не удален.'
         );
     });
+    document.getElementById(`id${delId}`).remove();
     selectAllGood();
-    setTimeout(() => {
-        window.location.reload()
-    }, 500); // И это тоже костыль. Только конченые говнокодеры используют такие костыли. Если ты не говнокодер, срочно выясни, почему при удалении и добавлении элементов в консоли появляется ошибка типа /* Failed to execute 'define' on 'CustomElementRegistry': the name "timer-display${N}" has already been used with this registry */
 };
