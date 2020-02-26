@@ -189,7 +189,6 @@ function renderCards(list) { // визуализируем в HTML очеред�
 
         let timerDisplay = document.createElement(`timer-display${elem['id']}`); // для каждого дедлайна - свой пользовательский элемент с таймингом.
         timerDisplay.classList.add('timerDisplay');
-        timerDisplay.id = 'ide' + elem.id;
         timerDisplay.setAttribute('deaddata', elem.date); // таймстамп дедлайна
         timerDisplay.setAttribute('currentdata', Date.parse(new Date())); // текущий таймстамп
 
