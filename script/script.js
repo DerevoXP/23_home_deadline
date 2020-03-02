@@ -1,20 +1,7 @@
-/* 1) необходимо разработать пользовательский элемент, который отображает кол-во дней минут и секунд до дедлайна и описание дедлайна (что нужно сделать).
-
-2) необходимо добавить интерфейс, который позволит добавлять дедлайны
-
-3) дедлайны должны сохраняться в Localstorage в виде массива объектов и при обновлении страницы отображаться 
-
-5) необходимо добавить кнопку, которая будет удалять элемент с дедлайном из localstorage 
-
-6)при достижени дедлайна цвет заднего фона должен меняться от зеленого к красному. (если есть еще сутки, то задний фон абсолютно зеленый, дедлайн просрочен, то абсолютно красный, переход должен быть постепенным).
-
-7)необходимо помимо обычного добавления дз в репу git необходимо опубликовать дз на github pages. Информацию о процессе можно погуглить */
-
-
-
 "use strict";
 
-
+let containerElem = document.createElement('div');
+containerElem.classList.add('container');
 
 ///////////////////// ЧТО КАСАЕТСЯ ИГР СО ВРЕМЕНЕМ ////////////////////////////////////
 
@@ -46,83 +33,68 @@ let myTime = new Date(myTimestamp); // приводим этот таймста�
 
 
 
-///////////////////// ЧТО КАСАЕТСЯ ДАТАБАЗЫ (ПО УМОЛЧАНИЮ РАБОТАЕТ АВТОМАТОМ - ДЛЯ РУЧНОГО РЕЖИМА РАСКОММЕНТЬ HTML) ////////////////////////////////////
+///////////////////// ДОБАВЛЯЕМ ДЕДЛАЙН //////////////////////////////////////
 
 
 
-let db; // объявляем переменную, которая будет датабазой
+let idSetter;
+if (localStorage.length == 0) { // если локалсторож пуст, то  создаём хранилище айдишников 
+    idSetter = 0;
+    localStorage.setItem(`idSetter`, idSetter)
+    localStorage.setItem(`Vasilyev_deadline`, JSON.stringify([]));
+} else {
+    idSetter = localStorage.getItem('idSetter');
+}
 
-try {
-    db = openDatabase('huw5', '1.0', 'Test DB', 2 * 1024 * 1024); // задаём характеристики датабазы
-} catch {
-    alert('Ошибка! В вашем браузере не стоит WebSQL! Попробуйте загрузить Google Chrome с официального сайта и пользоваться впредь исключительно этим браузером.'); // проверка на то, поддерживает ли браузер клиента WebSQL
-};
-
-// удаляем таблицу дедлайнов, если вдруг приспичило
-
-let dropGoodTable = `drop table Vasilyev_deadline`;
-
-function dropGoodTables() {
-    db.transaction(function (tx) {
-        tx.executeSql(
-            dropGoodTable,
-            [],
-            () => document.getElementById('developConsole').innerText = 'Таблица успешно удалена.',
-            () => document.getElementById('developConsole').innerText = 'Удалить таблицу дедлайнов почему-то не удалось.'
-        );
-    });
-    setTimeout(() => {
-        window.location.reload()
-    }, 500);
-};
-
-// создаём таблицу дедлайнов
-
-let databaseCreate = ` 
-    create table Vasilyev_deadline(
-        id integer primary key autoincrement,
-        date decimal,
-        description varchar(1024)
-    )`;
-
-addMagasine(); // УЗНАЙ, КАК ПРОВЕРИТЬ СУЩЕСТВОВАНИЕ ТАБЛИЦЫ, ЧТОБЫ ДОБАВИТЬ УСЛОВНЫЙ ОПЕРАТОР!!!
-
-function addMagasine() {
-    db.transaction(function (tx) {
-        tx.executeSql(
-            databaseCreate,
-            [],
-            () => document.getElementById('developConsole').innerText = 'Таблица дедлайнов пересоздана и пока что пуста',
-            () => console.log('Не удалось создать таблицу дедлайнов. Скорее всего, она уже существует.')
-        );
-    });
-};
-
-// добавляем дедлайны
-
-let goodInsert = 'insert into Vasilyev_deadline(date, description) values(?, ?)'; // маска для добавления товара в магазин. Хуй знает, как она работает.
-
-document.getElementById('addGoodIntoMagasine').addEventListener('click', () => addDeadline());
+document.getElementById('addGoodIntoMagasine').addEventListener('click', () => addDeadline()); // добавляем в базу дедлайн
 
 function addDeadline() {
 
     let goodUniqueDate = Date.parse(document.getElementById("addDate").value); // получаем таймстамп  из вышеприведённой формы 
     let goodUniqueDesc = document.forms.goodUniqueDesc.elements.two.value; // считываем описание дедлайна
+    let thisDead;
 
-    if (goodUniqueDate == '' || goodUniqueDesc == '') {
+    if (goodUniqueDate == '' || goodUniqueDesc == '') { // проверяем заполненность форм
         document.getElementById('developConsole').innerText = 'Сформируйте дедлайн как положено - дату, время и описание.';
         return;
     } else {
-        db.transaction(function (tx) {
-            tx.executeSql(
-                goodInsert,
-                [goodUniqueDate, goodUniqueDesc],
-                () => document.getElementById('developConsole').innerText = 'Дедлайн добавлен.',
-                () => document.getElementById('developConsole').innerText = 'Не удалось добавить дедлайн.'
-            );
-        });
+
+        thisDead = {
+            'id': JSON.parse(localStorage.getItem('idSetter')), // задаём уникальный айдишник основываясь на первой записи локалсторожа
+            'date': goodUniqueDate,
+            'description': goodUniqueDesc
+        };
+
+        idSetter++;
+        localStorage.setItem(`idSetter`, idSetter);
+
+        let base = JSON.parse(localStorage.getItem('Vasilyev_deadline'));
+        base.push(thisDead);
+        localStorage.setItem(`Vasilyev_deadline`, JSON.stringify(base));
     };
-    selectAllGood();
+    renderCards(JSON.parse(localStorage.getItem('Vasilyev_deadline')));
+};
+
+
+
+/////////////////// УДАЛЯЕМ ДЕДЛАЙН /////////////////////////////
+
+
+
+function deleteDeadline(delId) {
+
+    let base = JSON.parse(localStorage.getItem('Vasilyev_deadline'));
+
+    for (let i = 0; i < base.length; i++) {
+        if (base[i]['id'] == delId) {
+            base.splice(i, 1);
+            localStorage.setItem(`Vasilyev_deadline`, JSON.stringify(base));
+            break;
+        };
+    };
+
+    document.getElementById(`id${delId}`).remove(); // удаляем из DOM
+
 };
 
 
@@ -137,7 +109,7 @@ class Counter extends HTMLElement {
     }
 
     connectedCallback() {
-        selectAllGood();
+        renderCards(JSON.parse(localStorage.getItem('Vasilyev_deadline')));
     }
 
 };
@@ -150,23 +122,9 @@ customElements.define("deadline-list", Counter);
 
 
 
-function selectAllGood() { // запрашиваем список элементов из таблицы
-
-    db.transaction(function (tx) {
-        tx.executeSql('select * from Vasilyev_deadline;',
-            [],
-            (tx, response) => renderCards(response.rows), // запускаем фенкцию отображения элементов в HTML
-            () => document.getElementById('developConsole').innerText = 'Для начала создайте таблицу дедлайнов!'
-        );
-    });
-};
-
-let containerElem = document.createElement('div');
-containerElem.classList.add('container');
-
 function renderCards(list) { // визуализируем в HTML очередной дедлайн. Это ОЧЕНЬ длинная функция.
 
-    let arr = [...list]; // получаем массив с тремя объектами, у объектов ключи id, data и description
+    let arr = [...list]; // получаем массив с несколькими объектами, у объектов ключи id, data и description
 
     for (let i = 0; i < arr.length; i++) {
 
@@ -175,7 +133,7 @@ function renderCards(list) { // визуализируем в HTML очеред�
         if (document.getElementById(`id${elem.id}`)) {
             continue
         }
-        /* сделано для удаления ошибки типа "Failed to execute 'define' on 'CustomElementRegistry': the name 
+        /* условие сделано для удаления ошибки типа "Failed to execute 'define' on 'CustomElementRegistry': the name 
                "timer-display${N}" has already been used with this registry" при перерендере списка дедлайнов во время удаления или добавления пользовательского элемента. 
                Природа бага так и не выяснена. */
 
@@ -231,7 +189,7 @@ function renderCards(list) { // визуализируем в HTML очеред�
                     let minRem = getZero(Math.floor((delta - hoursRem * 3600 - dayRem * 86400) / 60));
                     let secRem = getZero(delta - hoursRem * 3600 - minRem * 60 - dayRem * 86400);
                     if (dayRem > 365) {
-                        this.innerText = 'Времени ещё - завались!'; // если больше года
+                        this.innerText = 'Времени ещё - завались!'; // если до дедлайна больше года
                         this.parentElement.style.background = `rgb(0, 250, 0)` // фон зелёный
                     } else if (dayRem > 0) { // если до дедлайна больше суток
                         this.innerText = 'Remain ' + dayRem + ' day and ' + hoursRem + ' : ' + minRem + " : " + secRem; // отображаем ещё и кол-во дней
@@ -262,25 +220,11 @@ function renderCards(list) { // визуализируем в HTML очеред�
                 return ['deaddata', 'currentdata' /* массив имён атрибутов для отслеживания их изменений */ ];
             }
         };
+
         customElements.define(`timer-display${elem['id']}`, UserTimer); // определяем пользовательский тайминг-элемент
 
     };
 
 
     document.querySelector('#crutchID').appendChild(containerElem);
-};
-
-// удаляем дедлайн из таблицы
-
-function deleteDeadline(delId) {
-    db.transaction(function (tx) {
-        tx.executeSql(
-            `delete from Vasilyev_deadline where id=${delId}`,
-            [],
-            () => document.getElementById('developConsole').innerText = `Дедлайн удалён.`,
-            () => document.getElementById('developConsole').innerText = 'Дедлайн не удален.'
-        );
-    });
-    document.getElementById(`id${delId}`).remove();
-    selectAllGood();
 };
